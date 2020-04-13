@@ -17,11 +17,11 @@
     state: present
     update_cache: yes
     cache_valid_time: 86400
-  when: network_interfaces
+  when: network_interfaces | length
   with_items: "{{ network_interface_required_packages }}"
 
 - include: all_interfaces.yml
-  when: network_interfaces
+  when: network_interfaces | length
 
 - name: configurations
   template:
@@ -33,11 +33,25 @@
   with_items:
   - "{{ network_interfaces | default([]) | groupby('device') }}"
   register: network_configuration_result
+  when: network_interfaces | length
   notify:
   - network restart interface service
   - network restart interface command
 
+- name: ptp bridge configurations
+  template:
+    src: ptpbridge.j2
+    dest: "{{ network_interface_path }}/ptpbridge-{{ item.bridge_number }}"
+    mode: "{{ network_interface_permissions }}"
+  with_items:
+    - "{{ network_interfaces_ptpbridges | default([]) }}"
+  register: network_ptpbridge_configuration_result
+  when: network_interfaces_ptpbridges | length
+  notify:
+    - network restart interface service
+    - network restart interface command
+
 - include: manage_devices.yml
   when:
   - network_manage_devices
-  - network_interfaces
+  - network_interfaces | length

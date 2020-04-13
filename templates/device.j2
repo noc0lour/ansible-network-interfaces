@@ -6,7 +6,7 @@
 auto {{ config.device }}
 {%   endif %}
 {%   for stanza in config.allow | default([]) %}
-allow-{{ stanza }}
+allow-{{ stanza }} {{ config.device }}
 {%   endfor %}
 
 iface {{ config.device }} {{ config.family | default('inet', true) }} {{ config.method | default('dhcp', true) }}

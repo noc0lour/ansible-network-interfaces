@@ -1,0 +1,22 @@
+# {{ ansible_managed }}
+
+auto br{{ item.bridge_number }}
+allow-hotplug br{{ item.bridge_number }}
+
+{% if item.remote_legacy %}
+iface br{{ item.bridge_number }} inet static
+  address {{ item.host_legacy }}/32
+  bridge_stp on
+  bridge_ports none
+  up ip route add {{ item.remote_legacy }}/32 dev $IFACE
+  down ip route del {{ item.remote_legacy }}/32 dev $IFACE
+{% endif %}
+
+{% if item.remote_ipv6 %}
+iface br{{ item.bridge_number }} inet6 static
+  address fe80::1
+  netmask 64
+  pre-up echo 0 > /proc/sys/net/ipv6/conf/$IFACE/accept_dad
+  post-up ip -6 route add {{ item.remote_ipv6 }}/128 dev $IFACE
+  down ip -6 route del {{ item.remote_ipv6 }}/128 dev $IFACE
+{% endif %}
